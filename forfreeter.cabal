@@ -12,10 +12,44 @@ source-repository head
   type: git
   location: https://github.com/symphony-org/forfreeter
 
+common globals
+  ghc-options:
+    -Werror
+  default-language:
+    Haskell2010
+  default-extensions:
+    FlexibleInstances
+    MultiParamTypeClasses
+    TemplateHaskell
+
 library
+  import:
+      globals
   exposed-modules:
+      Instance
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , template-haskell
   default-language: Haskell2010
+
+test-suite forfreeter-test
+  import:
+      globals
+  ghc-options:
+      -threaded
+  type:
+      exitcode-stdio-1.0
+  main-is:
+      Main.hs
+  hs-source-dirs:
+      test
+  other-modules:
+      InstanceSpec
+  build-depends:
+      forfreeter
+
+    , base >=4.7 && <5
+    , hedgehog
+    , template-haskell
