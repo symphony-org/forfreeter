@@ -1,0 +1,6 @@
+packages: .
+source-repository-package
+  type: git
+  location: https://github.com/lukasz-golebiewski/derive-topdown
+  tag: 11724d9fa9d8129cd4953d7ea5c023b3ee47c9a6
+  --sha256: 08wi4v8xb1wnmpc998blbbvy3hf0zihjwg0lhv38ac6n0s5djwsn
