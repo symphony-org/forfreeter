@@ -4,6 +4,11 @@ import           Control.Monad.Trans.Class    (MonadTrans)
 import           Data.Derive.TopDown.Instance (instance_)
 import           Language.Haskell.TH
 
+replaceInstanceDeclarations :: Dec -> [Dec] -> Maybe Dec
+replaceInstanceDeclarations (InstanceD a b c _ ) replacement =
+  Just $ InstanceD a b c replacement
+replaceInstanceDeclarations _ _ = Nothing
+
 mkEmptyInstance :: Name -> Name -> Q [Dec]
 mkEmptyInstance cName tName = instance_ cName tName
 
