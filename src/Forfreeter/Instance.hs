@@ -1,6 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Forfreeter.Instance where
 
+import           Control.Monad             (join)
 import           Control.Monad.Trans.Class (MonadTrans, lift)
 import           Language.Haskell.TH
 
@@ -24,8 +25,17 @@ mkEmptyInstance cName = do
   let
     ctxType4 = AppT (ConT cName) (vTm) -- Test m
     overlappable = Just Overlappable
-    ctx = [ctxType1, ctxType2, ctxType3, ctxType4 ] -- TODO: (cName m) =>
-    functionDeclarations = [] -- TODO: lift all existing functions
+    ctx = [ctxType1, ctxType2, ctxType3, ctxType4 ]
+  (ClassI (ClassD _cxt _name _tyVarBndr _funDep decs) _knownInstances) <- reify cName
+  let
+    liftDecl :: Dec -> Q [Dec]
+    liftDecl (SigD name (ForallT [KindedTV paramName _] _ _)) = do
+      pure [FunD name [Clause [VarP paramName] body []]]
+      where
+        -- TODO: implement lift for more than one parameter
+        body = (NormalB $ AppE (VarE 'lift) (AppE (VarE name) (VarE paramName)))
+    liftDecl _                  = pure []
+  functionDeclarations <- fmap join (traverse liftDecl decs)
   pure [InstanceD overlappable ctx (AppT (ConT cName) instanceType) functionDeclarations]
 
 mkShow :: Name -> Q [Dec]
