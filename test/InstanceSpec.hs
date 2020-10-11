@@ -1,26 +1,22 @@
+{-# LANGUAGE UndecidableInstances #-}
 module InstanceSpec where
 
 import           Forfreeter.Instance
-import           Hedgehog
+import           Hedgehog            hiding (Test)
 import           Hedgehog.Gen        as Gen
 import           Hedgehog.Range      as Range
 
 data User = User
-data User2 = User2
 
-class SomeClass t where
-  someFun :: t -> String
-  default someFun :: Show t => t -> String
-  someFun t = "Hello from someFun! Got: " <> show t
-
-class SomeClass2 t where
-  someFun2 :: t -> String
+class Test m where
+  foo :: a -> m String
+  -- TODO: remove default implementation
+  default foo :: Monad m => a -> m String
+  foo _ = pure "Hi from Test.foo"
 
 mkShow ''User
-mkEmptyInstance ''SomeClass ''()
-mkEmptyInstance ''SomeClass ''User
 
-mkOverlappable ''SomeClass2 ''User2
+mkEmptyInstance ''Test
 
 prop_1 :: Property
 prop_1 =
@@ -30,12 +26,8 @@ prop_1 =
 prop_some_class :: Property
 prop_some_class =
   property $ do
-    someFun User === "Hello from someFun! Got: hello from template show"
-
-prop_some_class_2 :: Property
-prop_some_class_2 =
-  property $ do
-    someFun2 User2 === "Generated in overlappable"
+    res <- foo ()
+    res === "Hi from Test.foo"
 
 tests :: IO Bool
 tests =
