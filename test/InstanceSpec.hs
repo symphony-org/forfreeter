@@ -10,11 +10,9 @@ data User = User
 
 class Test m where
   foo :: a -> m String
-  -- TODO: remove default implementation
-  default foo :: Monad m => a -> m String
-  foo _ = pure "Hi from Test.foo"
 
-instance Test IO
+instance Test IO where
+  foo _ = pure "Hi from Test.foo"
 
 mkShow ''User
 
