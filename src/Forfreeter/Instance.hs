@@ -14,13 +14,17 @@ mkEmptyInstance cName = do
   m <- newName "m"
   t <- newName "t"
   let
-    vT = varT t
-  instanceType <- appT vT (varT m) -- (t m)
-  ctxType1 <- [t| Monad $(varT m) |] -- Monad m
-  ctxType2 <- [t| Monad $(appT vT (varT m)) |] -- Monad (t m)
+    vm = varT m
+    vt = varT t
+  instanceType <- appT vt vm -- (t m)
+  ctxType1 <- [t| Monad $(vm) |] -- Monad m
+  ctxType2 <- [t| Monad $(appT vt vm) |] -- Monad (t m)
+  ctxType3 <- [t| MonadTrans $(vt) |] -- MonadTrans t
+  vTm <- varT m
   let
-    overlappable = Nothing
-    ctx = [ctxType1, ctxType2] -- TODO: (cName m, MonadTrans t) =>
+    ctxType4 = AppT (ConT cName) (vTm) -- Test m
+    overlappable = Just Overlappable
+    ctx = [ctxType1, ctxType2, ctxType3, ctxType4 ] -- TODO: (cName m) =>
     functionDeclarations = [] -- TODO: lift all existing functions
   pure [InstanceD overlappable ctx (AppT (ConT cName) instanceType) functionDeclarations]
 

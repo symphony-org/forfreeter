@@ -14,6 +14,8 @@ class Test m where
   default foo :: Monad m => a -> m String
   foo _ = pure "Hi from Test.foo"
 
+instance Test IO
+
 mkShow ''User
 
 mkEmptyInstance ''Test
