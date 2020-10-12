@@ -1,13 +1,33 @@
 {-# LANGUAGE UndecidableInstances #-}
 module InstanceSpec where
 
-import           Control.Monad.Trans.Class    (MonadTrans)
+import           Control.Monad.Trans.Class    (MonadTrans, lift)
+import           Control.Monad.Trans.Reader (ReaderT(..), ask)
 import           Control.Monad.Trans.Identity (IdentityT (..))
 import           Data.Function                ((&))
 import           Forfreeter.Instance
 import           Hedgehog                     hiding (Test)
 import           Hedgehog.Gen                 as Gen
 import           Hedgehog.Range               as Range
+import           Language.Haskell.TH
+
+---- Time
+
+class Monad m => Time m where
+  currentTime :: m Int
+
+mkEmptyInstance ''Time
+
+newtype ConstTime m a = ConstTime
+  { unConstTime :: ReaderT Int m a
+  }
+  deriving newtype (Functor, Applicative, Monad, MonadTrans)
+
+runConstTime :: Int -> ConstTime m a -> m a
+runConstTime time = flip runReaderT time . unConstTime
+
+instance Monad m => Time (ConstTime m) where
+  currentTime = ConstTime ask
 
 ---- Queue
 
@@ -45,10 +65,12 @@ instance Monad m => Repository (NoOpRepository m) where
 
 program ::
      Monad m
+  => Time m
   => Queue m
   => Repository m
   => m Bool
 program = do
+  time <- currentTime
   send "value"
   save "value"
   pure True
@@ -56,4 +78,5 @@ program = do
 tests :: IO Bool
 tests = program
   & runNoOpQueue
+  & runConstTime 10
   & runNoOpRepository
