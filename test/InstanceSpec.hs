@@ -49,6 +49,7 @@ instance Monad m => Queue (NoOpQueue m) where
 
 class Monad m => Repository m where
   save :: a -> m ()
+  deleteAll :: m ()
 
 mkEmptyInstance ''Repository
 
@@ -60,6 +61,7 @@ newtype NoOpRepository m a = NoOpRepository
 
 instance Monad m => Repository (NoOpRepository m) where
   save _ = pure ()
+  deleteAll = pure ()
 
 ----- program
 
