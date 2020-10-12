@@ -37,11 +37,3 @@ mkEmptyInstance cName = do
     liftDecl _                  = pure []
   functionDeclarations <- fmap join (traverse liftDecl decs)
   pure [InstanceD overlappable ctx (AppT (ConT cName) instanceType) functionDeclarations]
-
-mkShow :: Name -> Q [Dec]
-mkShow name = [d|
-  instance {-# OVERLAPS #-} Show $a where
-    show _ = "hello from template show"
-  |]
-  where
-    a = conT name

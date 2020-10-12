@@ -14,14 +14,7 @@ class Test m where
 instance Test IO where
   foo _ = pure "Hi from Test.foo"
 
-mkShow ''User
-
 mkEmptyInstance ''Test
-
-prop_1 :: Property
-prop_1 =
-  property $ do
-    ( show User ) === "hello from template show"
 
 prop_some_class :: Property
 prop_some_class =
