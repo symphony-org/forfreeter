@@ -5,8 +5,8 @@ import           Control.Monad             (join)
 import           Control.Monad.Trans.Class (MonadTrans, lift)
 import           Language.Haskell.TH
 
-mkEmptyInstance :: Name -> Q [Dec]
-mkEmptyInstance cName = do
+mkOverlappable :: Name -> Q [Dec]
+mkOverlappable cName = do
   m <- newName "m"
   t <- newName "t"
   let

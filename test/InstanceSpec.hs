@@ -16,7 +16,7 @@ import           Language.Haskell.TH
 class Monad m => Time m where
   currentTime :: m Int
 
-mkEmptyInstance ''Time
+mkOverlappable ''Time
 
 newtype ConstTime m a = ConstTime
   { unConstTime :: ReaderT Int m a
@@ -34,7 +34,7 @@ instance Monad m => Time (ConstTime m) where
 class Monad m => Queue m where
   send :: a -> m ()
 
-mkEmptyInstance ''Queue
+mkOverlappable ''Queue
 
 newtype NoOpQueue m a = NoOpQueue
   { runNoOpQueue :: m a
@@ -51,7 +51,7 @@ class Monad m => Repository m where
   save :: a -> m ()
   deleteAll :: m ()
 
-mkEmptyInstance ''Repository
+mkOverlappable ''Repository
 
 newtype NoOpRepository m a = NoOpRepository
   { runNoOpRepository :: m a
