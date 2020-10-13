@@ -18,7 +18,10 @@ common globals
   default-language:
     Haskell2010
   default-extensions:
+    GeneralizedNewtypeDeriving
     DefaultSignatures
+    DerivingStrategies
+    DerivingVia
     FlexibleInstances
     MultiParamTypeClasses
     TemplateHaskell
