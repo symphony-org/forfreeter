@@ -19,8 +19,6 @@ jobs:
       with:
         name: forfreeter
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-    - name: Install dependencies
-      run: nix-shell --command "cabal update"
     - name: Build
       run: nix-shell --command "cabal build --enable-tests --enable-benchmarks all"
     - name: Run tests
