@@ -1,0 +1,25 @@
+name: Haskell CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Nix
+      uses: cachix/install-nix-action@v11
+    - uses: cachix/cachix-action@v6
+      with:
+        name: forfreeter
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+    - name: Build
+      run: nix-shell --command "cabal build --enable-tests --enable-benchmarks all"
+    - name: Run tests
+      run: nix-shell --command "cabal test all"
