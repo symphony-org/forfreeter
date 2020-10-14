@@ -33,6 +33,7 @@ instance Monad m => Time (ConstTime m) where
 
 class Monad m => Queue m where
   send :: a -> m ()
+  send2 :: String -> m ()
 
 mkOverlappable ''Queue
 
@@ -44,6 +45,7 @@ newtype NoOpQueue m a = NoOpQueue
 
 instance Monad m => Queue (NoOpQueue m) where
   send _ = pure ()
+  send2 _ = pure ()
 
 ---- Repository
 
@@ -74,6 +76,7 @@ program ::
 program = do
   time <- currentTime
   send "value"
+  send2 "value"
   save "value"
   pure True
 
