@@ -24,14 +24,23 @@ mkOverlappable cName = do
   (ClassI (ClassD _cxt _name _tyVarBndr _funDep decs) _knownInstances) <- reify cName
   let
     liftDecl :: Dec -> Q [Dec]
-    liftDecl (SigD name appT@(AppT _ _)) = do
-      let
-        body = NormalB $ AppE (VarE 'lift) (VarE name)
-      pure [ValD (VarP name) body []]
+    -- function with single polymorphic parameter, e.g. foo :: a -> m ()
     liftDecl (SigD name (ForallT [KindedTV paramName _] _ _)) = do
       let
         body = (NormalB $ AppE (VarE 'lift) (AppE (VarE name) (VarE paramName)))
       pure [FunD name [Clause [VarP paramName] body []]]
+    -- function with single monomorphic parameter, e.g. foo :: String -> m ()
+    liftDecl (SigD name (AppT (AppT ArrowT _) (AppT _ _))) = do
+      paramName <- newName "p1"
+      let
+        body = NormalB (InfixE (Just (VarE 'lift)) (VarE '($)) (Just (AppE (VarE name) (VarE paramName))))
+      pure [FunD name [Clause [VarP paramName] body []]]
+    -- function without parameters
+    liftDecl (SigD name appT@(AppT _ _)) = do
+      let
+        body = NormalB $ AppE (VarE 'lift) (VarE name)
+      pure [ValD (VarP name) body []]
+    -- ignore everything else
     liftDecl _                  = pure []
   functionDeclarations <- fmap join (traverse liftDecl decs)
   pure [InstanceD overlappable ctx (AppT (ConT cName) instanceType) functionDeclarations]
