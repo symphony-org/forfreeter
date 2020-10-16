@@ -19,9 +19,6 @@ class Monad m => Time m where
 mkOverlappable ''Time
 mkConst ''Time
 
-runConstTime :: Int -> ConstTime m a -> m a
-runConstTime time = flip runReaderT time . unConstTime
-
 instance Monad m => Time (ConstTime m) where
   currentTime = ConstTime ask
 
