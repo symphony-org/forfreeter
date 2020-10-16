@@ -1,9 +1,42 @@
 {-# LANGUAGE UndecidableInstances #-}
-module Forfreeter.Instance where
+module Forfreeter.Instance
+  ( mkConst
+  , mkOverlappable
+  ) where
 
-import           Control.Monad             (join)
-import           Control.Monad.Trans.Class (MonadTrans, lift)
+import           Control.Monad              (join)
+import           Control.Monad.Trans.Class  (MonadTrans, lift)
+import           Control.Monad.Trans.Reader (ReaderT)
 import           Language.Haskell.TH
+
+mkConst :: Name -> Q [Dec]
+mkConst cName = do
+  constNewType <- mkConstNewtype cName
+  pure [constNewType]
+
+mkConstNewtype :: Name -> Q Dec
+mkConstNewtype cName = do
+  m <- newName "m"
+  a <- newName "a"
+  newt <- newName $ "Const" <> nameBase cName
+  newtc <- newName $ "Const" <> nameBase cName
+  unnewt <- newName $ "unConst" <> nameBase cName
+  let
+    tyvars = [PlainTV m,PlainTV a]
+    ctx =
+      [ ConT ''Functor
+      , ConT ''Applicative
+      , ConT ''Monad
+      , ConT ''MonadTrans
+      ]
+    derivings =
+      [ DerivClause (Just NewtypeStrategy) ctx]
+    varBangType =
+      ( unnewt
+      , Bang NoSourceUnpackedness NoSourceStrictness
+      , AppT (AppT (AppT (ConT ''ReaderT) (ConT ''Int)) (VarT m)) (VarT a))
+    con = RecC newtc [varBangType]
+  pure $ NewtypeD [] newt tyvars Nothing con derivings
 
 mkOverlappable :: Name -> Q [Dec]
 mkOverlappable cName = do
