@@ -1,9 +1,58 @@
 {-# LANGUAGE UndecidableInstances #-}
-module Forfreeter.Instance where
+module Forfreeter.Instance
+  ( mkConst
+  , mkOverlappable
+  ) where
 
-import           Control.Monad             (join)
-import           Control.Monad.Trans.Class (MonadTrans, lift)
+import           Control.Monad              (join)
+import           Control.Monad.Trans.Class  (MonadTrans, lift)
+import           Control.Monad.Trans.Reader (ReaderT (..), ask)
 import           Language.Haskell.TH
+
+mkConst :: Name -> Q [Dec]
+mkConst cName = do
+  (constNewType, unnewt) <- mkConstNewtype cName
+  constRun <- mkConstRun cName unnewt
+  pure $ [constNewType] <> constRun
+
+mkConstNewtype :: Name -> Q (Dec, Name)
+mkConstNewtype cName = do
+  m <- newName "m"
+  a <- newName "a"
+  newt <- newName $ "Const" <> nameBase cName
+  newtc <- newName $ "Const" <> nameBase cName
+  unnewt <- newName $ "unConst" <> nameBase cName
+  let
+    tyvars = [PlainTV m,PlainTV a]
+    ctx =
+      [ ConT ''Functor
+      , ConT ''Applicative
+      , ConT ''Monad
+      , ConT ''MonadTrans
+      ]
+    derivings =
+      [ DerivClause (Just NewtypeStrategy) ctx]
+    varBangType =
+      ( unnewt
+      , Bang NoSourceUnpackedness NoSourceStrictness
+      , AppT (AppT (AppT (ConT ''ReaderT) (ConT ''Int)) (VarT m)) (VarT a))
+    con = RecC newtc [varBangType]
+  let
+    constNewType = NewtypeD [] newt tyvars Nothing con derivings
+  pure $ (constNewType, unnewt)
+
+mkConstRun :: Name -> Name -> Q [Dec]
+mkConstRun cName unnewt = do
+  funDec <- mkConstRunFunDec cName unnewt
+  pure [funDec]
+
+mkConstRunFunDec :: Name -> Name -> Q Dec
+mkConstRunFunDec cName unnewt = do
+  funcName <- newName $ "runConst" <> nameBase cName
+  result <- newName "result"
+  let
+    body = InfixE (Just (AppE (AppE (VarE 'flip) (VarE 'runReaderT)) (VarE result))) (VarE '(.)) (Just (VarE unnewt))
+  pure $ FunD funcName [Clause [VarP result] (NormalB body) []]
 
 mkOverlappable :: Name -> Q [Dec]
 mkOverlappable cName = do

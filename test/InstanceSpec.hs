@@ -17,14 +17,7 @@ class Monad m => Time m where
   currentTime :: m Int
 
 mkOverlappable ''Time
-
-newtype ConstTime m a = ConstTime
-  { unConstTime :: ReaderT Int m a
-  }
-  deriving newtype (Functor, Applicative, Monad, MonadTrans)
-
-runConstTime :: Int -> ConstTime m a -> m a
-runConstTime time = flip runReaderT time . unConstTime
+mkConst ''Time
 
 instance Monad m => Time (ConstTime m) where
   currentTime = ConstTime ask
