@@ -6,18 +6,19 @@ For now we are focusing on instances described here:
 http://felixmulder.com/writing/2020/08/08/Revisiting-application-structure.html
 
 ## Example
-Turns:
+Allows to write:
+```haskell
+class Monad m => Time m where
+  currentTime :: m Int
+
+mkOverlappable ''Time
+```
+
+Instead of:
 ```haskell
 class Monad m => Time m where
   currentTime :: m Int
 
 instance {-# OVERLAPPABLE #-} (Monad m, Monad (t m), Time m, MonadTrans t) => Time (t m) where
   currentTime = lift . currentTime
-```
-Into:
-```haskell
-class Monad m => Time m where
-  currentTime :: m Int
-
-mkOverlappable ''Time
 ```
