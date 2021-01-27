@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase           #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Forfreeter.Instance
   ( mkConst
@@ -7,6 +8,7 @@ module Forfreeter.Instance
 import           Control.Monad              (join)
 import           Control.Monad.Trans.Class  (MonadTrans, lift)
 import           Control.Monad.Trans.Reader (ReaderT (..), ask)
+import           Data.Functor               ((<&>))
 import           Language.Haskell.TH
 
 mkConst :: Name -> Q [Dec]
@@ -73,16 +75,15 @@ mkOverlappable cName = do
   (ClassI (ClassD _cxt _name _tyVarBndr _funDep decs) _knownInstances) <- reify cName
   let
     liftDecl :: Dec -> Q [Dec]
-    -- function with single polymorphic parameter, e.g. foo :: a -> m ()
-    liftDecl (SigD name (ForallT [KindedTV paramName _] _ _)) = do
-      let
-        body = (NormalB $ AppE (VarE 'lift) (AppE (VarE name) (VarE paramName)))
-      pure [FunD name [Clause [VarP paramName] body []]]
-    -- function with two polymorphic parameters, e.g. foo :: a -> b -> m ()
-    liftDecl (SigD name (ForallT [(KindedTV paramName1 _),(KindedTV paramName2 _)] _ _)) = do
-      let
-        body = (NormalB $ AppE (VarE 'lift) (AppE (AppE (VarE name) (VarE paramName1)) (VarE paramName2)))
-      pure [FunD name [Clause [(VarP paramName1),(VarP paramName2)] body []]]
+    -- function with n polymorphic parameters, e.g. foo :: a -> b -> .. -> n -> m ()
+    liftDecl (SigD name (ForallT params _ _)) =
+      pure [FunD name [clause]]
+      where
+        paramNames = (\case (KindedTV p _) -> p) <$> params
+        body = (NormalB $ AppE (VarE 'lift) (applications (reverse paramNames)))
+        applications (n : ns) = AppE (applications ns) (VarE n)
+        applications []       = VarE name
+        clause = Clause (paramNames <&> VarP) body []
     -- function with single monomorphic parameter, e.g. foo :: String -> m ()
     liftDecl (SigD name (AppT (AppT ArrowT _) (AppT _ _))) = do
       paramName <- newName "p1"
