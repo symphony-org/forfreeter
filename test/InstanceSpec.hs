@@ -27,6 +27,7 @@ instance Monad m => Time (ConstTime m) where
 class Monad m => Queue m where
   send :: a -> m ()
   send2 :: String -> m ()
+  send3 :: a -> b -> m ()
 
 mkOverlappable ''Queue
 
@@ -39,6 +40,7 @@ newtype NoOpQueue m a = NoOpQueue
 instance Monad m => Queue (NoOpQueue m) where
   send _ = pure ()
   send2 _ = pure ()
+  send3 _ _ = pure ()
 
 ---- Repository
 

@@ -78,6 +78,11 @@ mkOverlappable cName = do
       let
         body = (NormalB $ AppE (VarE 'lift) (AppE (VarE name) (VarE paramName)))
       pure [FunD name [Clause [VarP paramName] body []]]
+    -- function with two polymorphic parameters, e.g. foo :: a -> b -> m ()
+    liftDecl (SigD name (ForallT [(KindedTV paramName1 _),(KindedTV paramName2 _)] _ _)) = do
+      let
+        body = (NormalB $ AppE (VarE 'lift) (AppE (AppE (VarE name) (VarE paramName1)) (VarE paramName2)))
+      pure [FunD name [Clause [(VarP paramName1),(VarP paramName2)] body []]]
     -- function with single monomorphic parameter, e.g. foo :: String -> m ()
     liftDecl (SigD name (AppT (AppT ArrowT _) (AppT _ _))) = do
       paramName <- newName "p1"
