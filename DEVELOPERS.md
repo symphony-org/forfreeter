@@ -7,5 +7,5 @@ import Language.Haskell.TH.Lib
 
 class SomeClass a where
 
-$(stringE . show =<< mkEmptyInstance ''SomeClass ''())
+$(stringE . show =<< mkOverlappable ''SomeClass)
 ```
