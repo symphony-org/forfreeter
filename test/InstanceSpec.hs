@@ -28,6 +28,7 @@ class Monad m => Queue m where
   send :: a -> m ()
   send2 :: String -> m ()
   send3 :: a -> b -> m ()
+  send4 :: a -> b -> c -> m ()
 
 mkOverlappable ''Queue
 
@@ -41,6 +42,7 @@ instance Monad m => Queue (NoOpQueue m) where
   send _ = pure ()
   send2 _ = pure ()
   send3 _ _ = pure ()
+  send4 _ _ _ = pure ()
 
 ---- Repository
 
